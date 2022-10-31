@@ -24,9 +24,9 @@ import (
 	"text/template"
 
 	"github.com/Masterminds/sprig"
-	"github.com/elastic/crd-ref-docs/config"
-	"github.com/elastic/crd-ref-docs/templates"
-	"github.com/elastic/crd-ref-docs/types"
+	"github.com/ianbuss/crd-ref-docs/config"
+	"github.com/ianbuss/crd-ref-docs/templates"
+	"github.com/ianbuss/crd-ref-docs/types"
 )
 
 type MarkdownRenderer struct {

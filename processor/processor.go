@@ -17,6 +17,7 @@
 package processor
 
 import (
+	"encoding/json"
 	"fmt"
 	gotypes "go/types"
 	"regexp"
@@ -29,6 +30,7 @@ import (
 	"golang.org/x/tools/go/packages"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"sigs.k8s.io/controller-tools/pkg/crd"
+	crdMarkers "sigs.k8s.io/controller-tools/pkg/crd/markers"
 	"sigs.k8s.io/controller-tools/pkg/loader"
 	"sigs.k8s.io/controller-tools/pkg/markers"
 )
@@ -120,11 +122,15 @@ func Process(config *config.Config) ([]types.GroupVersionDetails, error) {
 }
 
 func newProcessor(compiledConfig *compiledConfig, maxDepth int) *processor {
+	registry := &markers.Registry{}
+	for _, def := range crdMarkers.AllDefinitions {
+		_ = def.Register(registry)
+	}
 	p := &processor{
 		compiledConfig: compiledConfig,
 		maxDepth:       maxDepth,
 		parser: &crd.Parser{
-			Collector: &markers.Collector{Registry: &markers.Registry{}},
+			Collector: &markers.Collector{Registry: registry},
 			Checker:   &loader.TypeChecker{},
 		},
 		groupVersions: make(map[schema.GroupVersion]*groupVersionInfo),
@@ -325,6 +331,9 @@ func (p *processor) processStructFields(parentType *types.Type, pkg *loader.Pack
 			if len(args) > 0 && args[0] != "" {
 				fieldDef.Name = args[0]
 			}
+			if !strings.Contains(tagVal, "omitempty") {
+				fieldDef.Required = true
+			}
 		}
 
 		logger.Debugw("Loading field type", "field", fieldDef.Name)
@@ -338,6 +347,12 @@ func (p *processor) processStructFields(parentType *types.Type, pkg *loader.Pack
 			if fieldDef.Name == "" {
 				fieldDef.Name = fieldDef.Type.Name
 			}
+		}
+
+		// check for kubebuilder default marker
+		if val := f.Markers.Get("kubebuilder:default"); val != nil {
+			defaultBytes, _ := json.Marshal(val.(crdMarkers.Default).Value)
+			fieldDef.DefaultValue = fmt.Sprintf("%s", string(defaultBytes))
 		}
 
 		if p.shouldIgnoreField(parentTypeKey, fieldDef.Name) {
@@ -524,5 +539,8 @@ func mkRegistry() *markers.Registry {
 	registry.Define(groupNameMarker, markers.DescribesPackage, "")
 	registry.Define(objectRootMarker, markers.DescribesType, true)
 	registry.Define(versionNameMarker, markers.DescribesPackage, "")
+	for _, def := range crdMarkers.AllDefinitions {
+		def.Register(registry)
+	}
 	return registry
 }

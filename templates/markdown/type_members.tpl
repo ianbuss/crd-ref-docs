@@ -3,6 +3,6 @@
 {{- if eq $field.Name "metadata" -}}
 Refer to Kubernetes API documentation for fields of `metadata`.
 {{- else -}}
-{{ $field.Doc }}
+{{ $field.Required }} | {{ $field.DefaultValue }} | {{ $field.Doc }}
 {{- end -}}
 {{- end -}}

@@ -266,11 +266,13 @@ func (types TypeMap) InlineTypes() {
 
 // Field describes a field in a struct.
 type Field struct {
-	Name     string
-	Embedded bool
-	Inlined  bool
-	Doc      string
-	Type     *Type
+	Name         string
+	Embedded     bool
+	Inlined      bool
+	Doc          string
+	Type         *Type
+	DefaultValue string
+	Required     bool
 }
 
 type Fields []*Field

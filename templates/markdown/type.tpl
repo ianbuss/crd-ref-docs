@@ -16,11 +16,11 @@ _Appears in:_
 {{- end }}
 
 {{ if $type.Members -}}
-| Field | Description |
-| --- | --- |
+| Field | Required | Default | Description |
+| --- | --- | --- | --- |
 {{ if $type.GVK -}}
-| `apiVersion` _string_ | `{{ $type.GVK.Group }}/{{ $type.GVK.Version }}`
-| `kind` _string_ | `{{ $type.GVK.Kind }}`
+| `apiVersion` _string_ | | | `{{ $type.GVK.Group }}/{{ $type.GVK.Version }}` |
+| `kind` _string_ | | | `{{ $type.GVK.Kind }}` |
 {{ end -}}
 
 {{ range $type.Members -}}
